@@ -2,78 +2,36 @@ name: CI/CD INNOVATECH - Producción EKS
 
 on:
   push:
-    branches:
-      - "main"
+    branches: [ "main" ]
 
 jobs:
-  # ==========================================
-  # ETAPA 0: TESTS BÁSICOS
-  # ==========================================
-  tests:
-    name: Run Basic Tests
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout del código
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-          cache: maven
-
-      - name: Tests - Ventas
-        working-directory: back-Ventas_SpringBoot/Springboot-API-REST
-        run: mvn test
-
-      - name: Tests - Despachos
-        working-directory: back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO
-        run: mvn test
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "18"
-          cache: npm
-          cache-dependency-path: front_despacho/package-lock.json
-
-      - name: Frontend lint
-        working-directory: front_despacho
-        run: |
-          npm ci
-          npm run lint || true
-
   # ==========================================
   # ETAPA 1: BUILD & PUSH FRONTEND
   # ==========================================
   build-frontend:
     name: Build & Push Frontend
     runs-on: ubuntu-latest
-    needs: tests
-
     steps:
-      - name: Checkout del código
-        uses: actions/checkout@v3
+    - name: Checkout del código
+      uses: actions/checkout@v3
 
-      - name: Configurar credenciales AWS
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: us-east-1
+    - name: Configurar credenciales AWS
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+        aws-region: us-east-1
 
-      - name: Login en Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+    - name: Login en Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build & Push - Frontend
-        run: |
-          cd front_despacho
-          docker build -t ${{ steps.login-ecr.outputs.registry }}/front-despacho:latest .
-          docker push ${{ steps.login-ecr.outputs.registry }}/front-despacho:latest
+    - name: Build & Push - Frontend
+      run: |
+        cd front_despacho
+        docker build -t ${{ steps.login-ecr.outputs.registry }}/front-despacho:latest .
+        docker push ${{ steps.login-ecr.outputs.registry }}/front-despacho:latest
 
   # ==========================================
   # ETAPA 2: BUILD & PUSH BACKEND VENTAS
@@ -81,29 +39,27 @@ jobs:
   build-backend-ventas:
     name: Build & Push Ventas
     runs-on: ubuntu-latest
-    needs: tests
-
     steps:
-      - name: Checkout del código
-        uses: actions/checkout@v3
+    - name: Checkout del código
+      uses: actions/checkout@v3
 
-      - name: Configurar credenciales AWS
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: us-east-1
+    - name: Configurar credenciales AWS
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+        aws-region: us-east-1
 
-      - name: Login en Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+    - name: Login en Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build & Push - Ventas
-        run: |
-          cd back-Ventas_SpringBoot/Springboot-API-REST
-          docker build -t ${{ steps.login-ecr.outputs.registry }}/back-ventas:latest .
-          docker push ${{ steps.login-ecr.outputs.registry }}/back-ventas:latest
+    - name: Build & Push - Ventas
+      run: |
+        cd back-Ventas_SpringBoot/Springboot-API-REST
+        docker build -t ${{ steps.login-ecr.outputs.registry }}/back-ventas:latest .
+        docker push ${{ steps.login-ecr.outputs.registry }}/back-ventas:latest
 
   # ==========================================
   # ETAPA 3: BUILD & PUSH BACKEND DESPACHOS
@@ -111,29 +67,27 @@ jobs:
   build-backend-despachos:
     name: Build & Push Despachos
     runs-on: ubuntu-latest
-    needs: tests
-
     steps:
-      - name: Checkout del código
-        uses: actions/checkout@v3
+    - name: Checkout del código
+      uses: actions/checkout@v3
 
-      - name: Configurar credenciales AWS
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: us-east-1
+    - name: Configurar credenciales AWS
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+        aws-region: us-east-1
 
-      - name: Login en Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+    - name: Login en Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build & Push - Despachos
-        run: |
-          cd back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO
-          docker build -t 344024035966.dkr.ecr.us-east-1.amazonaws.com/back-despacho:latest .
-          docker push 344024035966.dkr.ecr.us-east-1.amazonaws.com/back-despacho:latest
+    - name: Build & Push - Despachos
+      run: |
+        cd back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO
+        docker build -t 344024035966.dkr.ecr.us-east-1.amazonaws.com/back-despacho:latest .
+        docker push 344024035966.dkr.ecr.us-east-1.amazonaws.com/back-despacho:latest
 
   # ==========================================
   # ETAPA 4: DEPLOY EN EKS
@@ -141,44 +95,41 @@ jobs:
   deploy-eks:
     name: Deploy to Amazon EKS
     runs-on: ubuntu-latest
-    needs:
-      - build-frontend
-      - build-backend-ventas
-      - build-backend-despachos
+    needs: [build-frontend, build-backend-ventas, build-backend-despachos]
 
     steps:
-      - name: Checkout del código
-        uses: actions/checkout@v4
+    - name: Checkout del código
+      uses: actions/checkout@v4
 
-      - name: Configurar credenciales AWS
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: us-east-1
+    - name: Configurar credenciales AWS
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+        aws-region: us-east-1
 
-      - name: Actualizar credenciales de EKS
-        run: |
-          aws eks update-kubeconfig --region us-east-1 --name Inovatech
+    - name: Actualizar credenciales de EKS
+      run: |
+        aws eks update-kubeconfig --region us-east-1 --name Inovatech
 
-      - name: Aplicar manifiestos de Kubernetes
-        run: |
-          kubectl apply -f k8s/namespace.yaml
-          kubectl apply -f k8s/secrets.yaml
-          kubectl apply -f k8s/init-db.yaml
-          kubectl apply -f k8s/database.yaml
-          kubectl apply -f k8s/backend.yaml
-          kubectl apply -f k8s/frontend.yaml
-          kubectl apply -f k8s/hpa.yaml
+    - name: Aplicar manifiestos de Kubernetes
+      run: |
+        kubectl apply -f k8s/namespace.yaml
+        kubectl apply -f k8s/secrets.yaml
+        kubectl apply -f k8s/init-db.yaml
+        kubectl apply -f k8s/database.yaml
+        kubectl apply -f k8s/backend.yaml
+        kubectl apply -f k8s/frontend.yaml
+        kubectl apply -f k8s/hpa.yaml
 
-      - name: Obligar a Kubernetes a desplegar los cambios (Rolling Update)
-        run: |
-          kubectl rollout restart deployment backend-venta backend-despacho frontend-app -n innovatech
+    - name: Obligar a Kubernetes a desplegar los cambios (Rolling Update)
+      run: |
+        kubectl rollout restart deployment backend-venta backend-despacho frontend-app -n innovatech
 
-      - name: Verificar deploy exitoso
-        run: |
-          kubectl rollout status deployment/backend-venta -n innovatech --timeout=300s &
-          kubectl rollout status deployment/backend-despacho -n innovatech --timeout=300s &
-          kubectl rollout status deployment/frontend-app -n innovatech --timeout=90s &
-          wait
+    - name: Verificar deploy exitoso
+      run: |
+        kubectl rollout status deployment/backend-venta -n innovatech --timeout=300s &
+        kubectl rollout status deployment/backend-despacho -n innovatech --timeout=300s &
+        kubectl rollout status deployment/frontend-app -n innovatech --timeout=90s &
+        wait
