@@ -1,0 +1,24 @@
+FROM maven:3.9-eclipse-temurin-17-alpine AS build
+
+WORKDIR /app
+
+COPY pom.xml ./
+
+RUN mvn dependency:go-offline
+
+COPY src ./src
+
+RUN mvn clean package -DskipTests
+
+#stage 2
+
+FROM eclipse-temurin:17-jre-alpine AS production
+
+COPY --from=build /app/target/*.jar app.jar
+
+EXPOSE 8080 
+
+# Restringir privilegios del contenedor a usuario no-root
+USER guest
+
+ENTRYPOINT [ "java", "-jar", "app.jar" ]

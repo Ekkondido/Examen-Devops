@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: innovatech-db
+  namespace: innovatech
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8.0
+        envFrom:
+        - secretRef:
+            name: innovatech-db-secret
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - name: mysql-storage
+          mountPath: /var/lib/mysql
+        - name: init-script-volume
+          mountPath: /docker-entrypoint-initdb.d/init.sql
+          subPath: init.sql
+      volumes:
+      - name: mysql-storage
+        emptyDir: {}
+      - name: init-script-volume
+        configMap:
+          name: mysql-init-script
+      resources:
+        requests:
+          cpu: "100m"
+          memory: "256Mi"
+        limits:
+          cpu: "500m"
+          memory: "1Gi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: innovatech-db-svc
+  namespace: innovatech
+spec:
+  type: NodePort  # <-- AGREGAR ESTO: Le dice a K8s que exponga el puerto en los nodos físicos
+  selector:
+    app: mysql
+  ports:
+  - port: 3306
+    targetPort: 3306
+    nodePort: 30306  # <-- AGREGAR ESTO: El puerto físico que se abrirá en las instancias EC2

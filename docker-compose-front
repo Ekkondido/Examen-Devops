@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  frontend-innovatech:
+    image: 484668757531.dkr.ecr.us-east-1.amazonaws.com/innovatech-frontend:latest
+    container_name: cont_front
+    restart: always
+    ports:
+      - "80:80"

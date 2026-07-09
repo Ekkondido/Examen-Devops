@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: database-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_APP_USER}
+      MYSQL_PASSWORD: ${MYSQL_APP_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - database_data:/var/lib/mysql
+
+  backend-despacho:
+    # SE ELIMINÓ EL BUILD Y SE REEMPLAZÓ POR LA IMAGEN DE ECR
+    image: 484668757531.dkr.ecr.us-east-1.amazonaws.com/innova-despacho:latest
+    container_name: backend-despacho
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      DB_ENDPOINT: mysql
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE}
+      DB_USERNAME: ${MYSQL_APP_USER}
+      DB_PASSWORD: ${MYSQL_APP_PASSWORD}
+    depends_on:
+      - mysql
+
+  backend-venta:
+    # SE ELIMINÓ EL BUILD Y SE REEMPLAZÓ POR LA IMAGEN DE ECR
+    image: 484668757531.dkr.ecr.us-east-1.amazonaws.com/innova-venta:latest
+    container_name: backend-venta
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      DB_ENDPOINT: mysql
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE}
+      DB_USERNAME: ${MYSQL_APP_USER}
+      DB_PASSWORD: ${MYSQL_APP_PASSWORD}
+    depends_on:
+      - mysql
+
+  frontend-innovatech:
+    # SE ELIMINÓ EL BUILD Y SE REEMPLAZÓ POR LA IMAGEN DE ECR
+    image: 484668757531.dkr.ecr.us-east-1.amazonaws.com/innovatech-frontend:latest
+    container_name: cont_front
+    restart: always
+    ports:
+      - "80:80"
+
+volumes:
+  database_data:

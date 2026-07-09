@@ -1,0 +1,149 @@
+# ==========================================
+# MICROSERVICIO: VENTA
+# ==========================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-venta
+  namespace: innovatech
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend-venta
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: backend-venta
+    spec:
+      terminationGracePeriodSeconds: 20
+      containers:
+      - name: venta
+        image: 344024035966.dkr.ecr.us-east-1.amazonaws.com/back-ventas:latest
+        ports:
+        - containerPort: 8080
+        lifecycle:
+          preStop:
+            exec:
+              command: ["sh", "-c", "sleep 10"]
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        env:
+        - name: AWS_OTEL_DISTRO_ENABLED
+          value: "false"
+        - name: OTEL_JAVAAGENT_ENABLED
+          value: "false"
+        - name: DB_ENDPOINT
+          value: "innovatech-db-svc"
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_NAME
+          value: "innovatech_db"
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: innovatech-db-secret
+              key: MYSQL_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: innovatech-db-secret
+              key: MYSQL_PASSWORD
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-venta-svc
+  namespace: innovatech
+spec:
+  type: ClusterIP
+  selector:
+    app: backend-venta
+  ports:
+  - port: 8080
+    targetPort: 8080
+---
+# ==========================================
+# MICROSERVICIO: DESPACHO
+# ==========================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-despacho
+  namespace: innovatech
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend-despacho
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: backend-despacho
+    spec:
+      terminationGracePeriodSeconds: 20
+      containers:
+      - name: despacho
+        image: 344024035966.dkr.ecr.us-east-1.amazonaws.com/back-despacho:latest
+        ports:
+        - containerPort: 8081
+        lifecycle:
+          preStop:
+            exec:
+              command: ["sh", "-c", "sleep 10"]
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        env:
+        - name: AWS_OTEL_DISTRO_ENABLED
+          value: "false"
+        - name: OTEL_JAVAAGENT_ENABLED
+          value: "false"
+        - name: DB_ENDPOINT
+          value: "innovatech-db-svc"
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_NAME
+          value: "innovatech_db"
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: innovatech-db-secret
+              key: MYSQL_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: innovatech-db-secret
+              key: MYSQL_PASSWORD
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-despacho-svc
+  namespace: innovatech
+spec:
+  type: ClusterIP
+  selector:
+    app: backend-despacho
+  ports:
+  - port: 8080
+    targetPort: 8081
